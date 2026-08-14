@@ -164,10 +164,57 @@ const deletePost = async (req, res) => {
   }
 };
 
+// Update Post
+const updatePost = async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Post text is required",
+      });
+    }
+
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    // Only the owner can update the post
+    if (post.user.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to update this post",
+      });
+    }
+
+    post.text = text.trim();
+
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Post updated successfully",
+      post,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createPost,
   getAllPosts,
   likePost,
   addComment,
   deletePost,
+  updatePost,
 };
