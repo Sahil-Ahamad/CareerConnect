@@ -10,6 +10,7 @@ const {
   addComment,
   deletePost,
   updatePost,
+  deleteComment,
 } = require("../controllers/postController");
 
 router.get("/", protect, getAllPosts);
@@ -18,5 +19,6 @@ router.put("/:id/like", protect, likePost);
 router.post("/:id/comment", protect, addComment);
 router.delete("/:id", protect, deletePost);
 router.put("/:id", protect, updatePost);
+router.delete("/:id/comment/:commentId", protect, deleteComment);
 
 module.exports = router;
