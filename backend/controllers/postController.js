@@ -92,6 +92,13 @@ const addComment = async (req, res) => {
   try {
     const { text } = req.body;
 
+    if (!text || !text.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment text is required",
+      });
+    }
+
     const post = await Post.findById(req.params.id);
 
     if (!post) {
@@ -101,21 +108,53 @@ const addComment = async (req, res) => {
       });
     }
 
-    const comment = {
+    post.comments.push({
       user: req.user.id,
-      text,
-    };
-
-    post.comments.push(comment);
+      text: text.trim(),
+    });
 
     await post.save();
 
     await post.populate("comments.user", "name profilePicture");
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       message: "Comment added successfully",
       comments: post.comments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Delete Post
+const deletePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    // Only the owner can delete the post
+    if (post.user.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this post",
+      });
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Post deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
@@ -130,4 +169,5 @@ module.exports = {
   getAllPosts,
   likePost,
   addComment,
+  deletePost,
 };
