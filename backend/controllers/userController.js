@@ -91,9 +91,48 @@ const uploadResume = async (req, res) => {
   }
 };
 
+// Search Users
+const searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || !q.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+
+    const searchQuery = q.trim();
+
+    const users = await User.find({
+      $or: [
+        { name: { $regex: searchQuery, $options: "i" } },
+        { skills: { $regex: searchQuery, $options: "i" } },
+        { college: { $regex: searchQuery, $options: "i" } },
+        { branch: { $regex: searchQuery, $options: "i" } },
+      ],
+    })
+      .select("-password")
+      .limit(20);
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
   uploadProfilePicture,
   uploadResume,
+  searchUsers,
 };

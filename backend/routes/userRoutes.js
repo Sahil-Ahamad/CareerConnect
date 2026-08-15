@@ -9,8 +9,9 @@ const {
   updateProfile,
   uploadProfilePicture,
   uploadResume,
+  searchUsers,
 } = require("../controllers/userController");
-
+router.get("/search", protect, searchUsers);
 // Get Profile
 router.get("/profile", protect, getProfile);
 
