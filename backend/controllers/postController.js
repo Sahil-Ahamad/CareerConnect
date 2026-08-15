@@ -1,4 +1,5 @@
 const Post = require("../models/Post");
+const User = require("../models/User");
 
 // Create Post
 const createPost = async (req, res) => {
@@ -256,6 +257,43 @@ const deleteComment = async (req, res) => {
   }
 };
 
+// Get Personalized Feed
+const getFeed = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user.id);
+
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Include user's own posts + posts from users they follow
+    const userIds = [
+      req.user.id,
+      ...currentUser.following,
+    ];
+
+    const posts = await Post.find({
+      user: { $in: userIds },
+    })
+      .populate("user", "name email profilePicture")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: posts.length,
+      posts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createPost,
   getAllPosts,
@@ -264,4 +302,5 @@ module.exports = {
   deletePost,
   updatePost,
   deleteComment,
+  getFeed,
 };
